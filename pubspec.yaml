@@ -1,0 +1,52 @@
+name: impactofit
+description: "Aplicación móvil de fitness y entrenamiento personalizado."
+publish_to: "none"
+
+version: 1.0.0+1
+
+environment:
+  sdk: ">=3.0.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # ── Estado (Provider) ──────────────────────────────────────────────────────
+  provider: ^6.0.0
+
+  # ── HTTP & Networking ──────────────────────────────────────────────────────
+  http: ^1.1.0
+
+  # ── Almacenamiento Seguro (Tokens JWT) ─────────────────────────────────────
+  flutter_secure_storage: ^9.0.0
+
+  # ── Validación de Email ────────────────────────────────────────────────────
+  email_validator: ^2.1.17
+
+  # ── Logging & Debugging ────────────────────────────────────────────────────
+  logger: ^2.0.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  # ── Análisis estático ──────────────────────────────────────────────────────
+  flutter_lints: ^3.0.0
+
+flutter:
+  uses-material-design: true
+
+  # ── Assets ─────────────────────────────────────────────────────────────────
+  assets:
+    - assets/images/
+    - assets/icons/
+
+  # ── Fuentes ────────────────────────────────────────────────────────────────
+  fonts:
+    - family: Instrument Sans
+      fonts:
+        - asset: assets/fonts/InstrumentSans-Regular.ttf
+        - asset: assets/fonts/InstrumentSans-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/InstrumentSans-SemiBold.ttf
+          weight: 600
