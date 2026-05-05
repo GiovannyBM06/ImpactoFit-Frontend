@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../../models/usuario.dart';
+import '../../services/admin_service.dart';
+
 class AdminCrearClaseScreen extends StatefulWidget {
   const AdminCrearClaseScreen({Key? key}) : super(key: key);
 
@@ -8,17 +11,62 @@ class AdminCrearClaseScreen extends StatefulWidget {
 }
 
 class _AdminCrearClaseScreenState extends State<AdminCrearClaseScreen> {
+  final _service = AdminService();
+  final _nombreController = TextEditingController();
+  final _descripcionController = TextEditingController();
   final _fechaController = TextEditingController();
   final _horaController = TextEditingController();
   final _cuposController = TextEditingController();
-  List<String> entrenadores = [];
+  late Future<List<UsuarioModel>> _futureEntrenadores;
+  UsuarioModel? _selectedEntrenador;
+
+  @override
+  void initState() {
+    super.initState();
+    _futureEntrenadores = _service.obtenerEntrenadores();
+  }
 
   @override
   void dispose() {
+    _nombreController.dispose();
+    _descripcionController.dispose();
     _fechaController.dispose();
     _horaController.dispose();
     _cuposController.dispose();
     super.dispose();
+  }
+
+  Future<void> _crearClase() async {
+    if (_selectedEntrenador == null) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Selecciona un entrenador')));
+      return;
+    }
+
+    final cupos = int.tryParse(_cuposController.text.trim());
+    if (cupos == null || cupos <= 0) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Ingresa un número de cupos válido')));
+      return;
+    }
+
+    final fecha = _fechaController.text.trim();
+    final hora = _horaController.text.trim();
+    if (fecha.isEmpty || hora.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Ingresa fecha y hora')));
+      return;
+    }
+
+    final fechaHora = '${fecha}T${hora}';
+    await _service.crearClaseGrupal(
+      entrenadorId: _selectedEntrenador!.id,
+      nombre: _nombreController.text.trim(),
+      fechaHora: fechaHora,
+      cupoMaximo: cupos,
+      descripcion: _descripcionController.text.trim().isEmpty ? null : _descripcionController.text.trim(),
+    );
+
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Clase grupal programada')));
+    Navigator.of(context).pop();
   }
 
   @override
@@ -43,97 +91,82 @@ class _AdminCrearClaseScreenState extends State<AdminCrearClaseScreen> {
               Expanded(
                 child: ListView(
                   children: [
-                    Container(
-                      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8)),
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text('Asignar Entrenador(es)', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700)),
-                          const SizedBox(height: 16),
-                          Container(
-                            width: double.infinity,
-                            height: 138,
-                            decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(8)),
-                            child: Icon(Icons.person, size: 80, color: Colors.grey[600]),
+                    FutureBuilder<List<UsuarioModel>>(
+                      future: _futureEntrenadores,
+                      builder: (context, snapshot) {
+                        final entrenadores = snapshot.data ?? [];
+                        return Container(
+                          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8)),
+                          padding: const EdgeInsets.all(16),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text('Asignar Entrenador', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700)),
+                              const SizedBox(height: 12),
+                              if (snapshot.connectionState == ConnectionState.waiting)
+                                const LinearProgressIndicator(),
+                              DropdownButtonFormField<UsuarioModel>(
+                                value: _selectedEntrenador,
+                                items: entrenadores.map((entrenador) => DropdownMenuItem(value: entrenador, child: Text(entrenador.fullName))).toList(),
+                                onChanged: (value) => setState(() => _selectedEntrenador = value),
+                                decoration: const InputDecoration(labelText: 'Entrenador'),
+                              ),
+                            ],
                           ),
-                          const SizedBox(height: 12),
-                          Center(
-                            child: IconButton(
-                              onPressed: () {},
-                              icon: const Icon(Icons.add, size: 32, color: Colors.black),
-                            ),
-                          ),
-                        ],
-                      ),
+                        );
+                      },
                     ),
                     const SizedBox(height: 24),
-                    // Fecha
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('Nombre:', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 20)),
+                        const SizedBox(height: 4),
+                        TextField(controller: _nombreController, decoration: const InputDecoration(border: InputBorder.none, isDense: true, filled: true, fillColor: Colors.white)),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('Descripción:', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 20)),
+                        const SizedBox(height: 4),
+                        TextField(controller: _descripcionController, decoration: const InputDecoration(border: InputBorder.none, isDense: true, filled: true, fillColor: Colors.white)),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         const Text('Fecha:', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 20)),
                         const SizedBox(height: 4),
-                        TextField(
-                          controller: _fechaController,
-                          decoration: InputDecoration(
-                            border: InputBorder.none,
-                            isDense: true,
-                            filled: true,
-                            fillColor: Colors.white,
-                            hintText: 'DD/MM/YYYY',
-                          ),
-                        ),
+                        TextField(controller: _fechaController, decoration: const InputDecoration(border: InputBorder.none, isDense: true, filled: true, fillColor: Colors.white, hintText: 'YYYY-MM-DD')),
                       ],
                     ),
                     const SizedBox(height: 16),
-                    // Hora
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         const Text('Hora:', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 20)),
                         const SizedBox(height: 4),
-                        TextField(
-                          controller: _horaController,
-                          decoration: InputDecoration(
-                            border: InputBorder.none,
-                            isDense: true,
-                            filled: true,
-                            fillColor: Colors.white,
-                            hintText: 'HH:MM',
-                          ),
-                        ),
+                        TextField(controller: _horaController, decoration: const InputDecoration(border: InputBorder.none, isDense: true, filled: true, fillColor: Colors.white, hintText: 'HH:MM:SS')),
                       ],
                     ),
                     const SizedBox(height: 16),
-                    // Cupos
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         const Text('Cupos:', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 20)),
                         const SizedBox(height: 4),
-                        TextField(
-                          controller: _cuposController,
-                          decoration: InputDecoration(
-                            border: InputBorder.none,
-                            isDense: true,
-                            filled: true,
-                            fillColor: Colors.white,
-                            hintText: 'Número de cupos',
-                          ),
-                        ),
+                        TextField(controller: _cuposController, keyboardType: TextInputType.number, decoration: const InputDecoration(border: InputBorder.none, isDense: true, filled: true, fillColor: Colors.white)),
                       ],
                     ),
                     const SizedBox(height: 32),
-                    // Programar button
                     Container(
                       height: 62,
                       decoration: BoxDecoration(color: const Color(0xFFFFB84E), borderRadius: BorderRadius.circular(15)),
                       child: MaterialButton(
-                        onPressed: () {
-                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Clase grupal programada')));
-                          Navigator.of(context).pop();
-                        },
+                        onPressed: _crearClase,
                         child: const Text('Programar', style: TextStyle(color: Colors.black, fontSize: 24, fontWeight: FontWeight.w700)),
                       ),
                     ),

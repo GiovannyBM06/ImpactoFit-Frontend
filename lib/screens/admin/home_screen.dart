@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+import '../../providers/auth_provider.dart';
 
 class AdminHomeScreen extends StatelessWidget {
   const AdminHomeScreen({Key? key}) : super(key: key);
@@ -14,13 +17,20 @@ class AdminHomeScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 8),
-              Row(
-                children: [
-                  const Expanded(
-                    child: Text('Bienvenido Admin A', style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.w700)),
-                  ),
-                  CircleAvatar(radius: 26, backgroundColor: Colors.white, child: Icon(Icons.person, color: Colors.black)),
-                ],
+              Consumer<AuthProvider>(
+                builder: (context, authProvider, _) {
+                  return Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          'Bienvenido ${authProvider.nombre ?? 'Administrador'}',
+                          style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.w700),
+                        ),
+                      ),
+                      const CircleAvatar(radius: 26, backgroundColor: Colors.white, child: Icon(Icons.person, color: Colors.black)),
+                    ],
+                  );
+                },
               ),
               const SizedBox(height: 24),
               // Registrar nuevo entrenador

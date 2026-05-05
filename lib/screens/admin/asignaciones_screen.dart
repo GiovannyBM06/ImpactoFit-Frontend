@@ -1,17 +1,33 @@
 import 'package:flutter/material.dart';
 
-class AdminAsignacionesScreen extends StatelessWidget {
+import '../../models/usuario.dart';
+import '../../services/admin_service.dart';
+
+class AdminAsignacionesScreen extends StatefulWidget {
   const AdminAsignacionesScreen({Key? key}) : super(key: key);
 
   @override
-  Widget build(BuildContext context) {
-    final entrenadores = [
-      {'name': 'Nombre Entrenador A', 'clientes': '12', 'rutinas': '54', 'antiguedad': '5 Años'},
-      {'name': 'Nombre Entrenadora B', 'clientes': '8', 'rutinas': '35', 'antiguedad': '3 Años'},
-      {'name': 'Nombre Entrenadora C', 'clientes': '10', 'rutinas': '42', 'antiguedad': '4 Años'},
-      {'name': 'Nombre Entrenador D', 'clientes': '15', 'rutinas': '60', 'antiguedad': '6 Años'},
-    ];
+  State<AdminAsignacionesScreen> createState() => _AdminAsignacionesScreenState();
+}
 
+class _AdminAsignacionesScreenState extends State<AdminAsignacionesScreen> {
+  final _service = AdminService();
+  late Future<List<UsuarioModel>> _futureEntrenadores;
+
+  @override
+  void initState() {
+    super.initState();
+    _futureEntrenadores = _service.obtenerEntrenadores();
+  }
+
+  Future<void> _refresh() async {
+    setState(() {
+      _futureEntrenadores = _service.obtenerEntrenadores();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF262525),
       body: SafeArea(
@@ -27,20 +43,38 @@ class AdminAsignacionesScreen extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               const Text('Entrenadores', style: TextStyle(color: Colors.white, fontSize: 40, fontWeight: FontWeight.w700)),
-              const SizedBox(height: 8),
-              const Text('Nº Entrenadores: xxx', style: TextStyle(color: Color(0xFFFFB84E), fontWeight: FontWeight.w700, fontSize: 16)),
               const SizedBox(height: 24),
               Expanded(
-                child: ListView.separated(
-                  itemCount: entrenadores.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 12),
-                  itemBuilder: (context, i) {
-                    final ent = entrenadores[i];
-                    return _AdminEntrenadorCard(
-                      name: ent['name'] as String,
-                      clientes: ent['clientes'] as String,
-                      rutinas: ent['rutinas'] as String,
-                      antiguedad: ent['antiguedad'] as String,
+                child: FutureBuilder<List<UsuarioModel>>(
+                  future: _futureEntrenadores,
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(child: CircularProgressIndicator(color: Color(0xFFFFB84E)));
+                    }
+                    if (snapshot.hasError) {
+                      return Center(child: Text(snapshot.error.toString(), style: const TextStyle(color: Colors.white)));
+                    }
+
+                    final entrenadores = snapshot.data ?? [];
+                    if (entrenadores.isEmpty) {
+                      return RefreshIndicator(
+                        onRefresh: _refresh,
+                        child: ListView(
+                          children: const [
+                            SizedBox(height: 120),
+                            Center(child: Text('No hay entrenadores registrados', style: TextStyle(color: Colors.white))),
+                          ],
+                        ),
+                      );
+                    }
+
+                    return RefreshIndicator(
+                      onRefresh: _refresh,
+                      child: ListView.separated(
+                        itemCount: entrenadores.length,
+                        separatorBuilder: (_, __) => const SizedBox(height: 12),
+                        itemBuilder: (context, i) => _AdminEntrenadorCard(entrenador: entrenadores[i]),
+                      ),
                     );
                   },
                 ),
@@ -54,17 +88,9 @@ class AdminAsignacionesScreen extends StatelessWidget {
 }
 
 class _AdminEntrenadorCard extends StatelessWidget {
-  final String name;
-  final String clientes;
-  final String rutinas;
-  final String antiguedad;
+  final UsuarioModel entrenador;
 
-  const _AdminEntrenadorCard({
-    required this.name,
-    required this.clientes,
-    required this.rutinas,
-    required this.antiguedad,
-  });
+  const _AdminEntrenadorCard({required this.entrenador});
 
   @override
   Widget build(BuildContext context) {
@@ -79,7 +105,7 @@ class _AdminEntrenadorCard extends StatelessWidget {
               CircleAvatar(radius: 22, backgroundColor: Colors.grey[300]),
               const SizedBox(width: 12),
               Expanded(
-                child: Text(name, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700)),
+                child: Text(entrenador.fullName, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700)),
               ),
               Icon(Icons.chevron_right, color: const Color(0xFFFFB84E)),
             ],
@@ -93,17 +119,17 @@ class _AdminEntrenadorCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('Nº Clientes asignados\n(actualmente)', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700)),
+                    const Text('Email', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700)),
                     const SizedBox(height: 4),
-                    Text(clientes, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w700, color: Colors.black))
+                    Text(entrenador.email, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Colors.black))
                   ],
                 ),
               ),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Antigüedad:', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
-                  Text(antiguedad, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700))
+                  const Text('Antigüedad', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+                  Text(entrenador.createdAt.toIso8601String().split('T').first, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700))
                 ],
               ),
             ],
@@ -112,9 +138,9 @@ class _AdminEntrenadorCard extends StatelessWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('Rutinas asignadas a sus clientes', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+              const Text('Estado', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
               const SizedBox(height: 4),
-              Text(rutinas, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w700, color: Colors.black))
+              Text(entrenador.isActive ? 'Activo' : 'Inactivo', style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w700, color: Colors.black))
             ],
           )
         ],

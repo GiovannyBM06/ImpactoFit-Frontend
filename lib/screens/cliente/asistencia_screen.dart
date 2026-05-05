@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+import '../../providers/auth_provider.dart';
+import '../../services/asistencia_service.dart';
 
 class AsistenciaScreen extends StatefulWidget {
   const AsistenciaScreen({Key? key}) : super(key: key);
@@ -8,16 +12,13 @@ class AsistenciaScreen extends StatefulWidget {
 }
 
 class _AsistenciaScreenState extends State<AsistenciaScreen> {
-  final TextEditingController _userController = TextEditingController(text: 'Juan Fernando Lozano');
-  final TextEditingController _timeController = TextEditingController(text: '15:30');
-  bool personal = false;
-  bool grupal = false;
-  bool libre = true;
+  final TextEditingController _observacionesController = TextEditingController();
+  final _service = AsistenciaService();
+  bool _isSubmitting = false;
 
   @override
   void dispose() {
-    _userController.dispose();
-    _timeController.dispose();
+    _observacionesController.dispose();
     super.dispose();
   }
 
@@ -40,86 +41,64 @@ class _AsistenciaScreenState extends State<AsistenciaScreen> {
               ),
               const SizedBox(height: 16),
               const SizedBox(height: 8),
-              const Text('Usuario:', style: TextStyle(color: Color(0xFFFFB84E), fontWeight: FontWeight.w700, fontSize: 24)),
+              Consumer<AuthProvider>(
+                builder: (context, authProvider, _) {
+                  return Text(
+                    'Usuario: ${authProvider.nombre ?? 'Cliente'}',
+                    style: const TextStyle(color: Color(0xFFFFB84E), fontWeight: FontWeight.w700, fontSize: 24),
+                  );
+                },
+              ),
+              const SizedBox(height: 18),
+              const Text('Observaciones', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 24)),
               const SizedBox(height: 12),
               Container(
                 width: double.infinity,
-                height: 40,
+                constraints: const BoxConstraints(minHeight: 140),
                 decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(25)),
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                alignment: Alignment.centerLeft,
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 child: TextField(
-                  controller: _userController,
-                  decoration: const InputDecoration(border: InputBorder.none, isDense: true),
+                  controller: _observacionesController,
+                  maxLines: 5,
+                  decoration: const InputDecoration(border: InputBorder.none, hintText: 'Escribe una observación opcional'),
+                ),
+              ),
+              const Spacer(),
+              Align(
+                alignment: Alignment.centerRight,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFFFB84E), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(200))),
+                  onPressed: _isSubmitting
+                      ? null
+                      : () async {
+                          setState(() => _isSubmitting = true);
+                          try {
+                            await _service.registrarAsistencia(observaciones: _observacionesController.text.trim().isEmpty ? null : _observacionesController.text.trim());
+                            if (!mounted) return;
+                            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Asistencia enviada')));
+                            Navigator.of(context).pop();
+                          } finally {
+                            if (mounted) setState(() => _isSubmitting = false);
+                          }
+                        },
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(_isSubmitting ? 'Enviando...' : 'Enviar', style: const TextStyle(color: Colors.black, fontWeight: FontWeight.w700, fontSize: 18)),
+                        const SizedBox(width: 8),
+                        const Icon(Icons.chevron_right, color: Colors.black),
+                      ],
+                    ),
+                  ),
                 ),
               ),
               const SizedBox(height: 18),
-              const Text('Hora de Ingreso', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 24)),
-              const SizedBox(height: 12),
-              Container(
-                width: double.infinity,
-                height: 40,
-                decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(25)),
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                alignment: Alignment.centerLeft,
-                child: TextField(
-                  controller: _timeController,
-                  decoration: const InputDecoration(border: InputBorder.none, isDense: true),
-                ),
-              ),
-              const SizedBox(height: 18),
-              const Text('Tipo actividad', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 24)),
-+              const SizedBox(height: 12),
-+              Row(
-+                crossAxisAlignment: CrossAxisAlignment.center,
-+                children: [
-+                  Checkbox(value: personal, onChanged: (v) => setState(() => personal = v ?? false), activeColor: Colors.white, checkColor: Colors.black),
-+                  const SizedBox(width: 8),
-+                  const Text('Entrenamiento personal', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
-+                ],
-+              ),
-+              Row(
-+                children: [
-+                  Checkbox(value: grupal, onChanged: (v) => setState(() => grupal = v ?? false), activeColor: Colors.white, checkColor: Colors.black),
-+                  const SizedBox(width: 8),
-+                  const Text('Clase Grupal', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
-+                ],
-+              ),
-+              Row(
-+                children: [
-+                  Checkbox(value: libre, onChanged: (v) => setState(() { libre = v ?? false; if (libre) { personal = false; grupal = false; } }), activeColor: Colors.white, checkColor: Colors.black),
-+                  const SizedBox(width: 8),
-+                  const Text('Entrenamiento Libre', style: TextStyle(color: Color(0xFFFFB84E), fontWeight: FontWeight.w700)),
-+                ],
-+              ),
-+              const Spacer(),
-+              Align(
-+                alignment: Alignment.centerRight,
-+                child: ElevatedButton(
-+                  style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFFFB84E), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(200))),
-+                  onPressed: () {
-+                    // TODO: submit asistencia to API
-+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Asistencia enviada')));
-+                    Navigator.of(context).pop();
-+                  },
-+                  child: Padding(
-+                    padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-+                    child: Row(
-+                      mainAxisSize: MainAxisSize.min,
-+                      children: const [
-+                        Text('Enviar', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w700, fontSize: 18)),
-+                        SizedBox(width: 8),
-+                        Icon(Icons.chevron_right, color: Colors.black),
-+                      ],
-+                    ),
-+                  ),
-+                ),
-+              ),
-+              const SizedBox(height: 18),
-+            ],
-+          ),
-+        ),
-+      ),
-+    );
-+  }
-+}
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}

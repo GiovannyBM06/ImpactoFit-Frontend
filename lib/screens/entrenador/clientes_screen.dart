@@ -1,18 +1,34 @@
 import 'package:flutter/material.dart';
+
+import '../../models/usuario.dart';
+import '../../services/entrenador_service.dart';
 import 'rutina_screen.dart';
 
-class ClientesEntrenadorScreen extends StatelessWidget {
+class ClientesEntrenadorScreen extends StatefulWidget {
   const ClientesEntrenadorScreen({Key? key}) : super(key: key);
 
   @override
-  Widget build(BuildContext context) {
-    final clientes = [
-      {'name': 'Nombre Cliente A', 'level': 'Principiante', 'days': 'Lunes Miércoles Viernes', 'time': '15:30 - 17:00 8:00 a 9:30'},
-      {'name': 'Nombre Cliente B', 'level': 'Intermedio', 'days': 'Martes Jueves', 'time': '10:00 - 11:00'},
-      {'name': 'Nombre Cliente C', 'level': 'Principiante', 'days': 'Lunes Miércoles', 'time': '18:00 - 19:00'},
-      {'name': 'Nombre Cliente D', 'level': 'Avanzado', 'days': 'Todos los días', 'time': '06:00 - 07:00'},
-    ];
+  State<ClientesEntrenadorScreen> createState() => _ClientesEntrenadorScreenState();
+}
 
+class _ClientesEntrenadorScreenState extends State<ClientesEntrenadorScreen> {
+  final _service = EntrenadorService();
+  late Future<List<UsuarioModel>> _futureClientes;
+
+  @override
+  void initState() {
+    super.initState();
+    _futureClientes = _service.obtenerClientes();
+  }
+
+  Future<void> _refresh() async {
+    setState(() {
+      _futureClientes = _service.obtenerClientes();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF262525),
       body: SafeArea(
@@ -29,19 +45,45 @@ class ClientesEntrenadorScreen extends StatelessWidget {
               const SizedBox(height: 8),
               const Text('Clientes', style: TextStyle(color: Colors.white, fontSize: 40, fontWeight: FontWeight.w700)),
               const SizedBox(height: 8),
-              const Text('Nº Clientes: 10', style: TextStyle(color: Color(0xFFFFB84E), fontWeight: FontWeight.w700, fontSize: 16)),
-              const SizedBox(height: 24),
               Expanded(
-                child: ListView.separated(
-                  itemCount: clientes.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 12),
-                  itemBuilder: (context, i) {
-                    final cliente = clientes[i];
-                    return ClienteCard(
-                      name: cliente['name'] as String,
-                      level: cliente['level'] as String,
-                      days: cliente['days'] as String,
-                      time: cliente['time'] as String,
+                child: FutureBuilder<List<UsuarioModel>>(
+                  future: _futureClientes,
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(child: CircularProgressIndicator(color: Color(0xFFFFB84E)));
+                    }
+                    if (snapshot.hasError) {
+                      return Center(child: Text(snapshot.error.toString(), style: const TextStyle(color: Colors.white)));
+                    }
+
+                    final clientes = snapshot.data ?? [];
+                    if (clientes.isEmpty) {
+                      return RefreshIndicator(
+                        onRefresh: _refresh,
+                        child: ListView(
+                          children: const [
+                            SizedBox(height: 120),
+                            Center(child: Text('No tienes clientes asignados', style: TextStyle(color: Colors.white))),
+                          ],
+                        ),
+                      );
+                    }
+
+                    return RefreshIndicator(
+                      onRefresh: _refresh,
+                      child: ListView.separated(
+                        itemCount: clientes.length,
+                        separatorBuilder: (_, __) => const SizedBox(height: 12),
+                        itemBuilder: (context, i) {
+                          final cliente = clientes[i];
+                          return ClienteCard(
+                            cliente: cliente,
+                            onTap: () => Navigator.of(context).push(MaterialPageRoute(
+                              builder: (_) => EntrenadorRutinaScreen(clienteId: cliente.id, clienteNombre: cliente.fullName),
+                            )),
+                          );
+                        },
+                      ),
                     );
                   },
                 ),
@@ -55,17 +97,15 @@ class ClientesEntrenadorScreen extends StatelessWidget {
 }
 
 class ClienteCard extends StatelessWidget {
-  final String name;
-  final String level;
-  final String days;
-  final String time;
+  final UsuarioModel cliente;
+  final VoidCallback onTap;
 
-  const ClienteCard({required this.name, required this.level, required this.days, required this.time});
+  const ClienteCard({required this.cliente, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () => Navigator.of(context).pushNamed('/entrenador/rutina'),
+      onTap: onTap,
       child: Container(
         decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8)),
         padding: const EdgeInsets.all(12),
@@ -80,8 +120,8 @@ class ClienteCard extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(name, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: Colors.black)),
-                      Text(level, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Color(0xFFFF8D28))),
+                      Text(cliente.fullName, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: Colors.black)),
+                      Text(cliente.email, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Color(0xFFFF8D28))),
                     ],
                   ),
                 ),
@@ -111,7 +151,7 @@ class ClienteCard extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Center(
-              child: TextButton(onPressed: () => Navigator.of(context).pushNamed('/entrenador/rutina'), child: const Text('Ver rutina', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w700))),
+              child: TextButton(onPressed: onTap, child: const Text('Ver rutina', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w700))),
             )
           ],
         ),

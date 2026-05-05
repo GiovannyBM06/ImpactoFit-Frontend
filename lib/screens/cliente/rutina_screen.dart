@@ -1,31 +1,33 @@
 import 'package:flutter/material.dart';
 
-class MiRutinaScreen extends StatelessWidget {
+import '../../models/rutina.dart';
+import '../../services/rutina_service.dart';
+
+class MiRutinaScreen extends StatefulWidget {
   const MiRutinaScreen({Key? key}) : super(key: key);
 
   @override
-  Widget build(BuildContext context) {
-    final exercises = [
-      {
-        'title': 'Trote en Caminadora',
-        'series': '3x',
-        'reps': '10 a 15 min',
-        'time': '0:45',
-        'speed': '8 Km/h',
-        'estimate': '2 - 4 min',
-        'image': 'assets/images/treadmill.png'
-      },
-      {
-        'title': 'Remo en Polea',
-        'series': '3x',
-        'reps': '8 a 12',
-        'time': '0:40',
-        'weight': '35.0 kg',
-        'estimate': '>30 seg',
-        'image': 'assets/images/row.png'
-      }
-    ];
+  State<MiRutinaScreen> createState() => _MiRutinaScreenState();
+}
 
+class _MiRutinaScreenState extends State<MiRutinaScreen> {
+  final _service = RutinaService();
+  late Future<RutinaModel> _futureRutina;
+
+  @override
+  void initState() {
+    super.initState();
+    _futureRutina = _service.obtenerMiRutina();
+  }
+
+  Future<void> _refresh() async {
+    setState(() {
+      _futureRutina = _service.obtenerMiRutina();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF262525),
       body: SafeArea(
@@ -40,22 +42,65 @@ class MiRutinaScreen extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 8),
-              const Align(alignment: Alignment.centerLeft, child: Text('0 de 10 completados', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700))),
-              const SizedBox(height: 12),
               Expanded(
-                child: ListView.separated(
-                  itemCount: exercises.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 18),
-                  itemBuilder: (context, i) {
-                    final ex = exercises[i];
-                    return ExerciseCard(
-                      title: ex['title'] as String,
-                      series: ex['series'] as String,
-                      reps: ex['reps'] as String,
-                      time: ex['time'] as String,
-                      bottomLeft: ex['speed'] as String? ?? ex['weight'] as String? ?? '',
-                      estimate: ex['estimate'] as String,
-                      image: ex['image'] as String,
+                child: FutureBuilder<RutinaModel>(
+                  future: _futureRutina,
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(child: CircularProgressIndicator(color: Color(0xFFFFB84E)));
+                    }
+
+                    if (snapshot.hasError) {
+                      return _ErrorState(message: snapshot.error.toString(), onRetry: _refresh);
+                    }
+
+                    final rutina = snapshot.data;
+                    if (rutina == null || rutina.ejercicios.isEmpty) {
+                      return RefreshIndicator(
+                        onRefresh: _refresh,
+                        child: ListView(
+                          children: const [
+                            SizedBox(height: 120),
+                            Center(
+                              child: Text('No tienes una rutina activa', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
+                            ),
+                          ],
+                        ),
+                      );
+                    }
+
+                    return RefreshIndicator(
+                      onRefresh: _refresh,
+                      child: ListView.separated(
+                        itemCount: rutina.ejercicios.length + 1,
+                        separatorBuilder: (_, index) => index == 0 ? const SizedBox(height: 12) : const SizedBox(height: 18),
+                        itemBuilder: (context, i) {
+                          if (i == 0) {
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(rutina.nombre, style: const TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.w700)),
+                                const SizedBox(height: 4),
+                                if (rutina.descripcion != null)
+                                  Text(rutina.descripcion!, style: TextStyle(color: Colors.white.withOpacity(0.7))),
+                                const SizedBox(height: 8),
+                                Text('${rutina.ejercicios.length} ejercicio(s)', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
+                              ],
+                            );
+                          }
+
+                          final ejercicio = rutina.ejercicios[i - 1];
+                          return ExerciseCard(
+                            title: ejercicio.nombre,
+                            series: '${ejercicio.series}x',
+                            reps: ejercicio.repeticiones != null ? '${ejercicio.repeticiones}' : (ejercicio.duracionSeg != null ? '${ejercicio.duracionSeg} seg' : '-'),
+                            time: ejercicio.descansoSeg != null ? '${ejercicio.descansoSeg} seg' : '-',
+                            bottomLeft: ejercicio.tipoMetrica,
+                            estimate: ejercicio.pesoKg != null ? '${ejercicio.pesoKg} kg' : '',
+                            description: ejercicio.descripcion,
+                          );
+                        },
+                      ),
                     );
                   },
                 ),
@@ -75,9 +120,9 @@ class ExerciseCard extends StatelessWidget {
   final String time;
   final String bottomLeft;
   final String estimate;
-  final String image;
+  final String? description;
 
-  const ExerciseCard({required this.title, required this.series, required this.reps, required this.time, required this.bottomLeft, required this.estimate, required this.image});
+  const ExerciseCard({required this.title, required this.series, required this.reps, required this.time, required this.bottomLeft, required this.estimate, this.description});
 
   @override
   Widget build(BuildContext context) {
@@ -86,8 +131,22 @@ class ExerciseCard extends StatelessWidget {
       child: Column(
         children: [
           Container(
-            height: 120,
-            decoration: BoxDecoration(borderRadius: const BorderRadius.only(topLeft: Radius.circular(15), topRight: Radius.circular(15)), image: DecorationImage(image: AssetImage(image), fit: BoxFit.cover)),
+            height: 92,
+            width: double.infinity,
+            decoration: const BoxDecoration(borderRadius: BorderRadius.only(topLeft: Radius.circular(15), topRight: Radius.circular(15)), color: Color(0xFFF3F2F2)),
+            padding: const EdgeInsets.all(12),
+            alignment: Alignment.centerLeft,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+                if (description != null) ...[
+                  const SizedBox(height: 4),
+                  Text(description!, style: const TextStyle(fontSize: 12, color: Colors.black54)),
+                ]
+              ],
+            ),
           ),
           Container(
             padding: const EdgeInsets.all(12),
@@ -98,9 +157,9 @@ class ExerciseCard extends StatelessWidget {
                 const SizedBox(height: 8),
                 Row(
                   children: [
-                    Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text('series', style: TextStyle(color: const Color(0xFFFFB84E), fontWeight: FontWeight.w600)), const SizedBox(height: 4), Text(series, style: const TextStyle(fontWeight: FontWeight.w600))]),
+                    Column(crossAxisAlignment: CrossAxisAlignment.start, children: [const Text('Series', style: TextStyle(color: Color(0xFFFFB84E), fontWeight: FontWeight.w600)), const SizedBox(height: 4), Text(series, style: const TextStyle(fontWeight: FontWeight.w600))]),
                     const SizedBox(width: 24),
-                    Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text('repeticiones', style: TextStyle(color: const Color(0xFFFFB84E), fontWeight: FontWeight.w600)), const SizedBox(height: 4), Text(reps, style: const TextStyle(fontWeight: FontWeight.w600))]),
+                    Column(crossAxisAlignment: CrossAxisAlignment.start, children: [const Text('Repeticiones / tiempo', style: TextStyle(color: Color(0xFFFFB84E), fontWeight: FontWeight.w600)), const SizedBox(height: 4), Text(reps, style: const TextStyle(fontWeight: FontWeight.w600))]),
                   ],
                 ),
                 const SizedBox(height: 12),
@@ -110,7 +169,7 @@ class ExerciseCard extends StatelessWidget {
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
                         decoration: BoxDecoration(color: const Color(0xFFF3F3F3), borderRadius: BorderRadius.circular(5)),
-                        child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [Text('Descanso', style: TextStyle(fontWeight: FontWeight.w600)), Text(time)]),
+                        child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [const Text('Descanso', style: TextStyle(fontWeight: FontWeight.w600)), Text(time)]),
                       ),
                     ),
                     const SizedBox(width: 8),
@@ -122,12 +181,35 @@ class ExerciseCard extends StatelessWidget {
                   children: [
                     Text(bottomLeft, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w500)),
                     const Spacer(),
-                    Column(children: [Text('Tiempo espera aprox.', style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w600)), const SizedBox(height: 4), Text(estimate, style: const TextStyle(fontWeight: FontWeight.w600))])
+                    Column(children: [const Text('Detalle', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600)), const SizedBox(height: 4), Text(estimate, style: const TextStyle(fontWeight: FontWeight.w600))])
                   ],
                 ),
               ],
             ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ErrorState extends StatelessWidget {
+  final String message;
+  final Future<void> Function() onRetry;
+
+  const _ErrorState({required this.message, required this.onRetry});
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.error_outline, color: Colors.white),
+          const SizedBox(height: 8),
+          Text(message, textAlign: TextAlign.center, style: const TextStyle(color: Colors.white)),
+          const SizedBox(height: 12),
+          ElevatedButton(onPressed: onRetry, child: const Text('Reintentar')),
         ],
       ),
     );

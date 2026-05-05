@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../services/admin_service.dart';
+
 class AdminCrearEntrenadorScreen extends StatefulWidget {
   const AdminCrearEntrenadorScreen({Key? key}) : super(key: key);
 
@@ -8,18 +10,41 @@ class AdminCrearEntrenadorScreen extends StatefulWidget {
 }
 
 class _AdminCrearEntrenadorScreenState extends State<AdminCrearEntrenadorScreen> {
+  final _service = AdminService();
   final _nombreController = TextEditingController();
-  final _apellidosController = TextEditingController();
-  final _experienciaController = TextEditingController();
-  bool hombre = true;
-  String experiencia = 'Principiante';
+  final _apellidoController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final _telefonoController = TextEditingController();
+  bool _saving = false;
 
   @override
   void dispose() {
     _nombreController.dispose();
-    _apellidosController.dispose();
-    _experienciaController.dispose();
+    _apellidoController.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
+    _telefonoController.dispose();
     super.dispose();
+  }
+
+  Future<void> _crearEntrenador() async {
+    setState(() => _saving = true);
+    try {
+      await _service.crearUsuario(
+        nombre: _nombreController.text.trim(),
+        apellido: _apellidoController.text.trim(),
+        email: _emailController.text.trim(),
+        password: _passwordController.text,
+        rol: 'entrenador',
+        telefono: _telefonoController.text.trim().isEmpty ? null : _telefonoController.text.trim(),
+      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Entrenador creado')));
+      Navigator.of(context).pop();
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
   }
 
   @override
@@ -44,129 +69,60 @@ class _AdminCrearEntrenadorScreenState extends State<AdminCrearEntrenadorScreen>
               Expanded(
                 child: ListView(
                   children: [
-                    Container(
-                      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8)),
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text('Imagen Entrenador', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700)),
-                          const SizedBox(height: 16),
-                          Container(
-                            width: double.infinity,
-                            height: 138,
-                            decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(8)),
-                            child: Icon(Icons.person, size: 80, color: Colors.grey[600]),
-                          ),
-                          const SizedBox(height: 24),
-                        ],
-                      ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('Nombre', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 20)),
+                        const SizedBox(height: 4),
+                        TextField(controller: _nombreController, decoration: const InputDecoration(border: InputBorder.none, isDense: true, filled: true, fillColor: Colors.white)),
+                      ],
                     ),
                     const SizedBox(height: 16),
-                    // Nombre
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 8.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text('Nombre:', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 20)),
-                          const SizedBox(height: 4),
-                          TextField(
-                            controller: _nombreController,
-                            decoration: InputDecoration(
-                              border: InputBorder.none,
-                              isDense: true,
-                              filled: true,
-                              fillColor: Colors.white,
-                            ),
-                          ),
-                        ],
-                      ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('Apellido', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 20)),
+                        const SizedBox(height: 4),
+                        TextField(controller: _apellidoController, decoration: const InputDecoration(border: InputBorder.none, isDense: true, filled: true, fillColor: Colors.white)),
+                      ],
                     ),
-                    // Apellidos
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 8.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text('Apellidos:', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 20)),
-                          const SizedBox(height: 4),
-                          TextField(
-                            controller: _apellidosController,
-                            decoration: InputDecoration(
-                              border: InputBorder.none,
-                              isDense: true,
-                              filled: true,
-                              fillColor: Colors.white,
-                            ),
-                          ),
-                        ],
-                      ),
+                    const SizedBox(height: 16),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('Email', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 20)),
+                        const SizedBox(height: 4),
+                        TextField(controller: _emailController, keyboardType: TextInputType.emailAddress, decoration: const InputDecoration(border: InputBorder.none, isDense: true, filled: true, fillColor: Colors.white)),
+                      ],
                     ),
-                    // Sexo
-                    Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 16.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text('Sexo:', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 20)),
-                          const SizedBox(height: 8),
-                          Row(
-                            children: [
-                              Checkbox(
-                                value: hombre,
-                                onChanged: (v) => setState(() => hombre = v ?? true),
-                              ),
-                              const SizedBox(width: 4),
-                              const Text('Hombre', style: TextStyle(color: Color(0xFFFFB84E), fontWeight: FontWeight.w700, fontSize: 20)),
-                            ],
-                          ),
-                          Row(
-                            children: [
-                              Checkbox(
-                                value: !hombre,
-                                onChanged: (v) => setState(() => hombre = !(v ?? false)),
-                              ),
-                              const SizedBox(width: 4),
-                              const Text('Mujer', style: TextStyle(color: Color(0xFFFFB84E), fontWeight: FontWeight.w700, fontSize: 20)),
-                            ],
-                          ),
-                        ],
-                      ),
+                    const SizedBox(height: 16),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('Contraseña', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 20)),
+                        const SizedBox(height: 4),
+                        TextField(controller: _passwordController, obscureText: true, decoration: const InputDecoration(border: InputBorder.none, isDense: true, filled: true, fillColor: Colors.white)),
+                      ],
                     ),
-                    // Experiencia
-                    Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 16.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text('Experiencia', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 20)),
-                          const SizedBox(height: 8),
-                          Column(
-                            children: ['Principiante', 'Intermedio', 'Avanzado'].map((exp) {
-                              return Row(
-                                children: [
-                                  Checkbox(
-                                    value: experiencia == exp,
-                                    onChanged: (v) => setState(() => experiencia = exp),
-                                  ),
-                                  const SizedBox(width: 4),
-                                  Text(exp, style: const TextStyle(color: Color(0xFFFFB84E), fontWeight: FontWeight.w700, fontSize: 20)),
-                                ],
-                              );
-                            }).toList(),
-                          ),
-                        ],
-                      ),
+                    const SizedBox(height: 16),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('Teléfono', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 20)),
+                        const SizedBox(height: 4),
+                        TextField(controller: _telefonoController, decoration: const InputDecoration(border: InputBorder.none, isDense: true, filled: true, fillColor: Colors.white)),
+                      ],
                     ),
                     const SizedBox(height: 24),
-                    // Create button
                     Center(
                       child: Container(
-                        width: 50,
+                        width: 150,
                         height: 50,
-                        decoration: BoxDecoration(color: Colors.white, shape: BoxShape.circle),
-                        child: IconButton(onPressed: () {}, icon: const Icon(Icons.add, color: Colors.black, size: 32)),
+                        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(999)),
+                        child: IconButton(
+                          onPressed: _saving ? null : _crearEntrenador,
+                          icon: Text(_saving ? 'Guardando...' : 'Crear', style: const TextStyle(color: Colors.black, fontWeight: FontWeight.w700)),
+                        ),
                       ),
                     ),
                     const SizedBox(height: 8),

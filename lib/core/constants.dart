@@ -22,7 +22,7 @@ const String CLIENTE_CANCELAR_CLASE_ENDPOINT = '/cliente/clases/{claseId}/cancel
 
 // ── Endpoints Entrenador ─────────────────────────────────────────────────────
 const String ENTRENADOR_CLIENTES_ENDPOINT = '/entrenador/clientes';
-const String ENTRENADOR_RUTINA_ENDPOINT = '/entrenador/clientes/{clienteId}/rutina';
+const String ENTRENADOR_RUTINA_ENDPOINT = '/entrenador/rutinas/{clienteId}';
 const String ENTRENADOR_EJERCICIOS_ENDPOINT = '/entrenador/ejercicios';
 const String ENTRENADOR_CREAR_EJERCICIO_ENDPOINT = '/entrenador/ejercicios';
 const String ENTRENADOR_EDITAR_EJERCICIO_ENDPOINT = '/entrenador/ejercicios/{ejercicioId}';
@@ -34,8 +34,8 @@ const String ADMIN_ENTRENADORES_ENDPOINT = '/admin/entrenadores';
 const String ADMIN_MEMBRESIAS_ENDPOINT = '/admin/membresias';
 const String ADMIN_CLASES_ENDPOINT = '/admin/clases';
 const String ADMIN_CREAR_CLASE_ENDPOINT = '/admin/clases';
-const String ADMIN_USUARIOS_ENDPOINT = '/admin/usuarios';
-const String ADMIN_CREAR_ENTRENADOR_ENDPOINT = '/admin/entrenadores';
+const String ADMIN_USUARIOS_ENDPOINT = '/usuarios';
+const String ADMIN_CREAR_USUARIO_ENDPOINT = '/usuarios';
 
 // ── Timeouts ─────────────────────────────────────────────────────────────────
 const Duration HTTP_TIMEOUT = Duration(seconds: 30);

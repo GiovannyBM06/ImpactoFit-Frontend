@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../services/entrenador_service.dart';
+
 class EntrenadorEjerciciosScreen extends StatefulWidget {
   const EntrenadorEjerciciosScreen({Key? key}) : super(key: key);
 
@@ -8,40 +10,59 @@ class EntrenadorEjerciciosScreen extends StatefulWidget {
 }
 
 class _EntrenadorEjerciciosScreenState extends State<EntrenadorEjerciciosScreen> {
-  final ejercicios = [
-    {
-      'nombre': 'Sentadilla',
-      'series': '4',
-      'reps': '12',
-      'peso': '80 kg',
-      'descanso': '90 seg',
-      'musculo': 'Piernas'
-    },
-    {
-      'nombre': 'Press de Banca',
-      'series': '4',
-      'reps': '10',
-      'peso': '60 kg',
-      'descanso': '2 min',
-      'musculo': 'Pecho'
-    },
-    {
-      'nombre': 'Dominadas',
-      'series': '3',
-      'reps': '8',
-      'peso': 'Peso corporal',
-      'descanso': '90 seg',
-      'musculo': 'Espalda'
-    },
-    {
-      'nombre': 'Flexiones',
-      'series': '3',
-      'reps': '15',
-      'peso': 'Peso corporal',
-      'descanso': '60 seg',
-      'musculo': 'Pecho'
-    },
-  ];
+  final _service = EntrenadorService();
+  late Future<List<Map<String, dynamic>>> _futureEjercicios;
+
+  @override
+  void initState() {
+    super.initState();
+    _futureEjercicios = _service.obtenerEjerciciosCatalogo();
+  }
+
+  Future<void> _refresh() async {
+    setState(() {
+      _futureEjercicios = _service.obtenerEjerciciosCatalogo();
+    });
+  }
+
+  Future<void> _createExercise() async {
+    final nombreController = TextEditingController();
+    final descripcionController = TextEditingController();
+
+    final created = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Nuevo ejercicio'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(controller: nombreController, decoration: const InputDecoration(labelText: 'Nombre')),
+            TextField(controller: descripcionController, decoration: const InputDecoration(labelText: 'Descripción')),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancelar')),
+          FilledButton(
+            onPressed: () async {
+              await _service.crearEjercicio(nombre: nombreController.text.trim(), descripcion: descripcionController.text.trim().isEmpty ? null : descripcionController.text.trim());
+              if (!mounted) return;
+              Navigator.pop(context, true);
+            },
+            child: const Text('Guardar'),
+          ),
+        ],
+      ),
+    );
+
+    nombreController.dispose();
+    descripcionController.dispose();
+
+    if (created == true) {
+      await _refresh();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Ejercicio creado')));
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -61,21 +82,39 @@ class _EntrenadorEjerciciosScreenState extends State<EntrenadorEjerciciosScreen>
               const SizedBox(height: 8),
               const Text('Ejercicios', style: TextStyle(color: Colors.white, fontSize: 40, fontWeight: FontWeight.w700)),
               const SizedBox(height: 8),
-              Text('Total: ${ejercicios.length} ejercicios', style: const TextStyle(color: Color(0xFFFFB84E), fontWeight: FontWeight.w700, fontSize: 16)),
+              FutureBuilder<List<Map<String, dynamic>>>(
+                future: _futureEjercicios,
+                builder: (context, snapshot) {
+                  final count = snapshot.data?.length ?? 0;
+                  return Text('Total: $count ejercicios', style: const TextStyle(color: Color(0xFFFFB84E), fontWeight: FontWeight.w700, fontSize: 16));
+                },
+              ),
               const SizedBox(height: 24),
               Expanded(
-                child: ListView.separated(
-                  itemCount: ejercicios.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 12),
-                  itemBuilder: (context, i) {
-                    final ej = ejercicios[i];
-                    return _EjercicioCard(
-                      nombre: ej['nombre'] as String,
-                      series: ej['series'] as String,
-                      reps: ej['reps'] as String,
-                      peso: ej['peso'] as String,
-                      descanso: ej['descanso'] as String,
-                      musculo: ej['musculo'] as String,
+                child: FutureBuilder<List<Map<String, dynamic>>>(
+                  future: _futureEjercicios,
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(child: CircularProgressIndicator(color: Color(0xFFFFB84E)));
+                    }
+                    if (snapshot.hasError) {
+                      return Center(child: Text(snapshot.error.toString(), style: const TextStyle(color: Colors.white)));
+                    }
+
+                    final ejercicios = snapshot.data ?? [];
+                    return RefreshIndicator(
+                      onRefresh: _refresh,
+                      child: ListView.separated(
+                        itemCount: ejercicios.length,
+                        separatorBuilder: (_, __) => const SizedBox(height: 12),
+                        itemBuilder: (context, i) {
+                          final ej = ejercicios[i];
+                          return _EjercicioCard(
+                            nombre: ej['nombre']?.toString() ?? '',
+                            descripcion: ej['descripcion']?.toString(),
+                          );
+                        },
+                      ),
                     );
                   },
                 ),
@@ -85,9 +124,7 @@ class _EntrenadorEjerciciosScreenState extends State<EntrenadorEjerciciosScreen>
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Agregar nuevo ejercicio')));
-        },
+        onPressed: _createExercise,
         backgroundColor: Colors.white,
         child: const Icon(Icons.add, color: Colors.black, size: 32),
       ),
@@ -97,20 +134,9 @@ class _EntrenadorEjerciciosScreenState extends State<EntrenadorEjerciciosScreen>
 
 class _EjercicioCard extends StatelessWidget {
   final String nombre;
-  final String series;
-  final String reps;
-  final String peso;
-  final String descanso;
-  final String musculo;
+  final String? descripcion;
 
-  const _EjercicioCard({
-    required this.nombre,
-    required this.series,
-    required this.reps,
-    required this.peso,
-    required this.descanso,
-    required this.musculo,
-  });
+  const _EjercicioCard({required this.nombre, required this.descripcion});
 
   @override
   Widget build(BuildContext context) {
@@ -126,71 +152,11 @@ class _EjercicioCard extends StatelessWidget {
               Expanded(
                 child: Text(nombre, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700)),
               ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(color: const Color(0xFFFF8D28), borderRadius: BorderRadius.circular(4)),
-                child: Text(musculo, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 12)),
-              )
+              const SizedBox.shrink()
             ],
           ),
           const SizedBox(height: 12),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text('Series', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
-                  const SizedBox(height: 4),
-                  Text(series, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Color(0xFFFFB84E)))
-                ],
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text('Repeticiones', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
-                  const SizedBox(height: 4),
-                  Text(reps, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Color(0xFFFFB84E)))
-                ],
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text('Peso', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
-                  const SizedBox(height: 4),
-                  Text(peso, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Color(0xFFFFB84E)))
-                ],
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text('Descanso', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
-                    const SizedBox(height: 4),
-                    Text(descanso, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Color(0xFFFFB84E)))
-                  ],
-                ),
-              ),
-              Row(
-                children: [
-                  IconButton(
-                    onPressed: () => ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Editar $nombre'))),
-                    icon: const Icon(Icons.edit, color: Color(0xFFFFB84E)),
-                  ),
-                  IconButton(
-                    onPressed: () => ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Eliminar $nombre'))),
-                    icon: const Icon(Icons.delete, color: Colors.red),
-                  ),
-                ],
-              )
-            ],
-          )
+          if (descripcion != null && descripcion!.isNotEmpty) Text(descripcion!, style: const TextStyle(fontSize: 14, color: Colors.black87)),
         ],
       ),
     );

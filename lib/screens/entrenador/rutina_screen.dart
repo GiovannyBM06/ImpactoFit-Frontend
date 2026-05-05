@@ -1,7 +1,27 @@
 import 'package:flutter/material.dart';
 
-class EntrenadorRutinaScreen extends StatelessWidget {
-  const EntrenadorRutinaScreen({Key? key}) : super(key: key);
+import '../../models/rutina.dart';
+import '../../services/entrenador_service.dart';
+
+class EntrenadorRutinaScreen extends StatefulWidget {
+  final int? clienteId;
+  final String? clienteNombre;
+
+  const EntrenadorRutinaScreen({Key? key, this.clienteId, this.clienteNombre}) : super(key: key);
+
+  @override
+  State<EntrenadorRutinaScreen> createState() => _EntrenadorRutinaScreenState();
+}
+
+class _EntrenadorRutinaScreenState extends State<EntrenadorRutinaScreen> {
+  final _service = EntrenadorService();
+  late Future<RutinaModel>? _futureRutina;
+
+  @override
+  void initState() {
+    super.initState();
+    _futureRutina = widget.clienteId == null ? null : _service.obtenerRutinaDeCliente(widget.clienteId!);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -19,9 +39,9 @@ class EntrenadorRutinaScreen extends StatelessWidget {
                   Expanded(
                     child: Center(
                       child: Column(
-                        children: const [
-                          Text('Rutina:', style: TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.w700)),
-                          Text('Cliente X', style: TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.w700)),
+                        children: [
+                          const Text('Rutina:', style: TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.w700)),
+                          Text(widget.clienteNombre ?? 'Seleccione un cliente', style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.w700)),
                         ],
                       ),
                     ),
@@ -30,158 +50,102 @@ class EntrenadorRutinaScreen extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 8),
-              const Text('1 ejercicio(s) asignado(s)', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 15)),
-              const SizedBox(height: 12),
-              Expanded(
-                child: ListView(
-                  children: [
-                    // Hora aprox. entreno
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 12.0),
-                      child: Row(
-                        children: [
-                          const Text('Hora aprox. entreno:', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 20)),
-                          const Spacer(),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+              if (_futureRutina == null)
+                const Expanded(
+                  child: Center(
+                    child: Text('Abre esta pantalla desde la lista de clientes para ver su rutina.', textAlign: TextAlign.center, style: TextStyle(color: Colors.white)),
+                  ),
+                )
+              else
+                Expanded(
+                  child: FutureBuilder<RutinaModel>(
+                    future: _futureRutina,
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return const Center(child: CircularProgressIndicator(color: Color(0xFFFFB84E)));
+                      }
+                      if (snapshot.hasError) {
+                        return Center(child: Text(snapshot.error.toString(), style: const TextStyle(color: Colors.white)));
+                      }
+
+                      final rutina = snapshot.data;
+                      if (rutina == null || rutina.ejercicios.isEmpty) {
+                        return const Center(child: Text('Este cliente no tiene rutina activa', style: TextStyle(color: Colors.white)));
+                      }
+
+                      return ListView.separated(
+                        itemCount: rutina.ejercicios.length + 1,
+                        separatorBuilder: (_, __) => const SizedBox(height: 12),
+                        itemBuilder: (context, i) {
+                          if (i == 0) {
+                            return Text('${rutina.ejercicios.length} ejercicio(s) asignado(s)', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 15));
+                          }
+
+                          final ejercicio = rutina.ejercicios[i - 1];
+                          return Container(
                             decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(15)),
-                            child: const Text('16:00', style: TextStyle(color: Colors.black, fontSize: 16)),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    // Exercise card
-                    Container(
-                      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(15)),
-                      padding: const EdgeInsets.all(12),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text('Ejercicio #1', style: TextStyle(color: Color(0xFFFFB84E), fontWeight: FontWeight.w500, fontSize: 15)),
-                          const SizedBox(height: 8),
-                          Container(
-                            width: double.infinity,
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(color: const Color(0xFFF3F2F2), borderRadius: BorderRadius.circular(8)),
-                            child: const Text('Jalón en Polea', style: TextStyle(fontSize: 32, fontWeight: FontWeight.w400)),
-                          ),
-                          const SizedBox(height: 16),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: const [Text('Nº series:', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600)), SizedBox(height: 4), Text('3 x', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600))],
-                                ),
-                              ),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: const [Text('Nº repeticiones:', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600)), SizedBox(height: 4), Text('16 a 20', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600))],
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 12),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: const [Text('Descanso :', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600)), SizedBox(height: 4), Text('0:45', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600))],
-                                ),
-                              ),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: const [Text('Entre series:', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)), SizedBox(height: 4), Text('0:45', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600))],
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 12),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: const [Text('Fin ejercicio:', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)), SizedBox(height: 4), Text('3:00', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600))],
-                                ),
-                              ),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: const [Text('Intensidad:', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600)), SizedBox(height: 4), Text('15 kg', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600))],
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 16),
-                          // Machine section
-                          const Text('Máquina Utilizada', style: TextStyle(color: Color(0xFFFFB84E), fontWeight: FontWeight.w600, fontSize: 20)),
-                          const SizedBox(height: 8),
-                          Row(
-                            children: [
-                              Container(
-                                width: 100,
-                                height: 100,
-                                decoration: BoxDecoration(borderRadius: BorderRadius.circular(15), image: DecorationImage(image: AssetImage('assets/images/machine.jpg'), fit: BoxFit.cover)),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    const Text('Polea Dual', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w600, fontSize: 20)),
-                                    const SizedBox(height: 8),
-                                    const Text('Uso esperado', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w600, fontSize: 20)),
-                                    const SizedBox(height: 8),
-                                    Container(
-                                      padding: const EdgeInsets.all(8),
-                                      decoration: BoxDecoration(color: const Color(0xFFF3F2F2), borderRadius: BorderRadius.circular(8)),
-                                      child: const Text('A las 16:00 se espera un uso:\nModerado', style: TextStyle(color: Colors.black, fontSize: 18)),
-                                    ),
-                                  ],
-                                ),
-                              )
-                            ],
-                          ),
-                          const SizedBox(height: 16),
-                          // Days section
-                          Row(
-                            children: const [
-                              Text('Días:', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600)),
-                              SizedBox(width: 8),
-                              Text('| L | Ma | Mi | J | V | S | D |', style: TextStyle(fontSize: 20)),
-                            ],
-                          ),
-                          const SizedBox(height: 24),
-                          // Add exercise button
-                          Center(
+                            padding: const EdgeInsets.all(12),
                             child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
+                                Text('Ejercicio #${ejercicio.orden}', style: const TextStyle(color: Color(0xFFFFB84E), fontWeight: FontWeight.w500, fontSize: 15)),
+                                const SizedBox(height: 8),
                                 Container(
-                                  width: 60,
-                                  height: 60,
-                                  decoration: BoxDecoration(color: Colors.white, shape: BoxShape.circle, border: Border.all(color: const Color(0xFFFFB84E), width: 2)),
-                                  child: IconButton(onPressed: () {}, icon: const Icon(Icons.add, color: Color(0xFFFFB84E), size: 32)),
+                                  width: double.infinity,
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(color: const Color(0xFFF3F2F2), borderRadius: BorderRadius.circular(8)),
+                                  child: Text(ejercicio.nombre, style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w400)),
                                 ),
                                 const SizedBox(height: 8),
-                                const Text('Agregar Ejercicio', style: TextStyle(color: Colors.white, fontSize: 15)),
+                                if (ejercicio.descripcion != null) Text(ejercicio.descripcion!, style: const TextStyle(color: Colors.black87)),
+                                const SizedBox(height: 12),
+                                Wrap(
+                                  spacing: 12,
+                                  runSpacing: 12,
+                                  children: [
+                                    _MiniInfo(label: 'Series', value: '${ejercicio.series}'),
+                                    _MiniInfo(label: 'Métrica', value: ejercicio.tipoMetrica),
+                                    _MiniInfo(label: 'Repeticiones', value: ejercicio.repeticiones?.toString() ?? '-'),
+                                    _MiniInfo(label: 'Duración', value: ejercicio.duracionSeg?.toString() ?? '-'),
+                                    _MiniInfo(label: 'Peso', value: ejercicio.pesoKg?.toString() ?? '-'),
+                                    _MiniInfo(label: 'Descanso', value: ejercicio.descansoSeg?.toString() ?? '-'),
+                                  ],
+                                ),
                               ],
                             ),
-                          ),
-                          const SizedBox(height: 16),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              )
+                          );
+                        },
+                      );
+                    },
+                  ),
+                )
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _MiniInfo extends StatelessWidget {
+  final String label;
+  final String value;
+
+  const _MiniInfo({required this.label, required this.value});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(8),
+      decoration: BoxDecoration(color: const Color(0xFFF3F2F2), borderRadius: BorderRadius.circular(8)),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFFFF8D28))),
+          const SizedBox(height: 4),
+          Text(value, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+        ],
       ),
     );
   }
