@@ -15,6 +15,7 @@ import 'screens/entrenador/ejercicios_screen.dart';
 import 'screens/admin/home_screen.dart';
 import 'screens/admin/clientes_screen.dart';
 import 'screens/admin/asignaciones_screen.dart';
+import 'screens/admin/crear_cliente_screen.dart';
 import 'screens/admin/crear_entrenador_screen.dart';
 import 'screens/admin/crear_clase_screen.dart';
 import 'screens/admin/membresia_screen.dart';
@@ -75,6 +76,7 @@ class MyApp extends StatelessWidget {
       '/admin/home': (_) => const AdminHomeScreen(),
       '/admin/clientes': (_) => const AdminClientesScreen(),
       '/admin/asignaciones': (_) => const AdminAsignacionesScreen(),
+      '/admin/crear_cliente': (_) => const AdminCrearClienteScreen(),
       '/admin/crear_entrenador': (_) => const AdminCrearEntrenadorScreen(),
       '/admin/crear_clase': (_) => const AdminCrearClaseScreen(),
       '/admin/membresias': (_) => const AdminMembresiasScreen(),

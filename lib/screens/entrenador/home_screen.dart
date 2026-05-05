@@ -7,6 +7,13 @@ import 'clientes_screen.dart';
 class EntrenadorHomeScreen extends StatelessWidget {
   const EntrenadorHomeScreen({Key? key}) : super(key: key);
 
+  Future<void> _cerrarSesion(BuildContext context) async {
+    final auth = context.read<AuthProvider>();
+    await auth.logout();
+    if (!context.mounted) return;
+    Navigator.of(context).pushNamedAndRemoveUntil('/login', (_) => false);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -27,6 +34,10 @@ class EntrenadorHomeScreen extends StatelessWidget {
                           'Bienvenido ${authProvider.nombre ?? 'Entrenador'}',
                           style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.w700),
                         ),
+                      ),
+                      IconButton(
+                        onPressed: () => _cerrarSesion(context),
+                        icon: const Icon(Icons.logout, color: Colors.white),
                       ),
                       const CircleAvatar(radius: 26, backgroundColor: Colors.white, child: Icon(Icons.person, color: Colors.black)),
                     ],
@@ -91,7 +102,7 @@ class EntrenadorHomeScreen extends StatelessWidget {
                 children: [
                   Expanded(
                     child: GestureDetector(
-                      onTap: () {},
+                      onTap: () => Navigator.of(context).pushNamed('/entrenador/clientes'),
                       child: Container(
                         height: 100,
                         decoration: BoxDecoration(
@@ -112,7 +123,7 @@ class EntrenadorHomeScreen extends StatelessWidget {
                                     decoration: BoxDecoration(color: const Color(0xFFFFB84E), borderRadius: BorderRadius.circular(50)),
                                     child: Row(
                                       mainAxisSize: MainAxisSize.min,
-                                      children: const [Text('Crear', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w700, fontSize: 13)), SizedBox(width: 6), Icon(Icons.add, color: Colors.black, size: 16)],
+                                      children: const [Text('Gestionar', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w700, fontSize: 13)), SizedBox(width: 6), Icon(Icons.add, color: Colors.black, size: 16)],
                                     ),
                                   )
                                 ],
@@ -126,7 +137,7 @@ class EntrenadorHomeScreen extends StatelessWidget {
                   const SizedBox(width: 12),
                   Expanded(
                     child: GestureDetector(
-                      onTap: () {},
+                      onTap: () => Navigator.of(context).pushNamed('/entrenador/clientes'),
                       child: Container(
                         height: 100,
                         decoration: BoxDecoration(
@@ -147,7 +158,7 @@ class EntrenadorHomeScreen extends StatelessWidget {
                                     decoration: BoxDecoration(color: const Color(0xFFFFB84E), borderRadius: BorderRadius.circular(50)),
                                     child: Row(
                                       mainAxisSize: MainAxisSize.min,
-                                      children: const [Text('Mod.', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w700, fontSize: 13)), SizedBox(width: 6), Icon(Icons.edit, color: Colors.black, size: 16)],
+                                      children: const [Text('Gestionar', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w700, fontSize: 13)), SizedBox(width: 6), Icon(Icons.edit, color: Colors.black, size: 16)],
                                     ),
                                   )
                                 ],

@@ -22,11 +22,12 @@ const String CLIENTE_CANCELAR_CLASE_ENDPOINT = '/cliente/clases/{claseId}/cancel
 
 // ── Endpoints Entrenador ─────────────────────────────────────────────────────
 const String ENTRENADOR_CLIENTES_ENDPOINT = '/entrenador/clientes';
+const String ENTRENADOR_CREAR_RUTINA_ENDPOINT = '/entrenador/rutinas';
 const String ENTRENADOR_RUTINA_ENDPOINT = '/entrenador/rutinas/{clienteId}';
-const String ENTRENADOR_EJERCICIOS_ENDPOINT = '/entrenador/ejercicios';
-const String ENTRENADOR_CREAR_EJERCICIO_ENDPOINT = '/entrenador/ejercicios';
-const String ENTRENADOR_EDITAR_EJERCICIO_ENDPOINT = '/entrenador/ejercicios/{ejercicioId}';
-const String ENTRENADOR_ELIMINAR_EJERCICIO_ENDPOINT = '/entrenador/ejercicios/{ejercicioId}';
+const String ENTRENADOR_ASIGNAR_EJERCICIO_ENDPOINT = '/entrenador/rutinas/{rutinaId}/ejercicios';
+const String ENTRENADOR_EDITAR_EJECUCION_ENDPOINT = '/entrenador/ejercicios/{ejecucionId}';
+const String ENTRENADOR_ELIMINAR_EJECUCION_ENDPOINT = '/entrenador/ejercicios/{ejecucionId}';
+const String EJERCICIOS_CATALOGO_ENDPOINT = '/ejercicios';
 
 // ── Endpoints Admin ──────────────────────────────────────────────────────────
 const String ADMIN_CLIENTES_ENDPOINT = '/admin/clientes';
@@ -36,6 +37,8 @@ const String ADMIN_CLASES_ENDPOINT = '/admin/clases';
 const String ADMIN_CREAR_CLASE_ENDPOINT = '/admin/clases';
 const String ADMIN_USUARIOS_ENDPOINT = '/usuarios';
 const String ADMIN_CREAR_USUARIO_ENDPOINT = '/usuarios';
+const String ADMIN_ASIGNAR_ENTRENADOR_ENDPOINT = '/usuarios/asignar-entrenador';
+const String ADMIN_DESVINCULAR_ENTRENADOR_ENDPOINT = '/usuarios/desvincular-entrenador';
 
 // ── Timeouts ─────────────────────────────────────────────────────────────────
 const Duration HTTP_TIMEOUT = Duration(seconds: 30);

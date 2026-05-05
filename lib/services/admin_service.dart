@@ -39,6 +39,17 @@ class AdminService {
     throw ApiException(statusCode: -1, message: 'Respuesta inválida al listar membresías', details: response);
   }
 
+  Future<List<ClaseGrupalModel>> obtenerClases() async {
+    final response = await _api.get(ADMIN_CLASES_ENDPOINT);
+    if (response is List) {
+      return response
+          .whereType<Map>()
+          .map((item) => ClaseGrupalModel.fromJson(Map<String, dynamic>.from(item)))
+          .toList();
+    }
+    throw ApiException(statusCode: -1, message: 'Respuesta invalida al listar clases', details: response);
+  }
+
   Future<UsuarioModel> crearUsuario({
     required String nombre,
     required String apellido,
@@ -80,6 +91,28 @@ class AdminService {
       '${ADMIN_MEMBRESIAS_ENDPOINT}/$membresiaId/activar',
       body: {'monto': monto, 'notas': notas},
     );
+  }
+
+  Future<Map<String, dynamic>> asignarEntrenadorACliente({required int clienteId, required int entrenadorId}) async {
+    final response = await _api.post(
+      ADMIN_ASIGNAR_ENTRENADOR_ENDPOINT,
+      body: {'clienteId': clienteId, 'entrenadorId': entrenadorId},
+    );
+    if (response is Map) {
+      return Map<String, dynamic>.from(response);
+    }
+    throw ApiException(statusCode: -1, message: 'Respuesta invalida al asignar entrenador', details: response);
+  }
+
+  Future<Map<String, dynamic>> desvincularEntrenadorDeCliente({required int clienteId, required int entrenadorId}) async {
+    final response = await _api.post(
+      ADMIN_DESVINCULAR_ENTRENADOR_ENDPOINT,
+      body: {'clienteId': clienteId, 'entrenadorId': entrenadorId},
+    );
+    if (response is Map) {
+      return Map<String, dynamic>.from(response);
+    }
+    throw ApiException(statusCode: -1, message: 'Respuesta invalida al desvincular entrenador', details: response);
   }
 
   Future<ClaseGrupalModel> crearClaseGrupal({

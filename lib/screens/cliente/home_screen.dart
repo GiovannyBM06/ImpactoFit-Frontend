@@ -6,6 +6,13 @@ import '../../providers/auth_provider.dart';
 class ClienteHomeScreen extends StatelessWidget {
   const ClienteHomeScreen({Key? key}) : super(key: key);
 
+  Future<void> _cerrarSesion(BuildContext context) async {
+    final auth = context.read<AuthProvider>();
+    await auth.logout();
+    if (!context.mounted) return;
+    Navigator.of(context).pushNamedAndRemoveUntil('/login', (_) => false);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -27,6 +34,10 @@ class ClienteHomeScreen extends StatelessWidget {
                           style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.w700),
                         ),
                       ),
+                      IconButton(
+                        onPressed: () => _cerrarSesion(context),
+                        icon: const Icon(Icons.logout, color: Colors.white),
+                      ),
                       const CircleAvatar(radius: 26, backgroundColor: Colors.white, child: Icon(Icons.person, color: Colors.black)),
                     ],
                   );
@@ -41,13 +52,6 @@ class ClienteHomeScreen extends StatelessWidget {
                 child: ListView(
                   children: [
                     _ActionCard(
-                      title: 'Nivel de uso de máquinas',
-                      buttonText: 'Ver',
-                      image: 'assets/images/machines.jpg',
-                      onTap: () {},
-                    ),
-                    const SizedBox(height: 18),
-                    _ActionCard(
                       title: 'Diligenciar asistencia',
                       buttonText: 'Diligenciar',
                       image: 'assets/images/attendance.jpg',
@@ -59,6 +63,13 @@ class ClienteHomeScreen extends StatelessWidget {
                       buttonText: 'Ir',
                       image: 'assets/images/routine.jpg',
                       onTap: () => Navigator.of(context).pushNamed('/cliente/mi_rutina'),
+                    ),
+                    const SizedBox(height: 18),
+                    _ActionCard(
+                      title: 'Inscripción a clase grupal',
+                      buttonText: 'Inscribirme',
+                      image: 'assets/images/classes.jpg',
+                      onTap: () => Navigator.of(context).pushNamed('/cliente/clases'),
                     ),
                     const SizedBox(height: 30),
                   ],

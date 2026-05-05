@@ -12,18 +12,74 @@ class AdminAsignacionesScreen extends StatefulWidget {
 
 class _AdminAsignacionesScreenState extends State<AdminAsignacionesScreen> {
   final _service = AdminService();
-  late Future<List<UsuarioModel>> _futureEntrenadores;
+  late Future<void> _futureData;
+  List<UsuarioModel> _clientes = const [];
+  List<UsuarioModel> _entrenadores = const [];
+  UsuarioModel? _clienteSeleccionado;
+  UsuarioModel? _entrenadorSeleccionado;
+  bool _saving = false;
 
   @override
   void initState() {
     super.initState();
-    _futureEntrenadores = _service.obtenerEntrenadores();
+    _futureData = _loadData();
+  }
+
+  Future<void> _loadData() async {
+    final clientes = await _service.obtenerClientes();
+    final entrenadores = await _service.obtenerEntrenadores();
+    _clientes = clientes;
+    _entrenadores = entrenadores;
+
+    if (_clientes.isNotEmpty) {
+      _clienteSeleccionado ??= _clientes.first;
+    }
+    if (_entrenadores.isNotEmpty) {
+      _entrenadorSeleccionado ??= _entrenadores.first;
+    }
   }
 
   Future<void> _refresh() async {
-    setState(() {
-      _futureEntrenadores = _service.obtenerEntrenadores();
-    });
+    await _loadData();
+    if (mounted) setState(() {});
+  }
+
+  Future<void> _asignar() async {
+    if (_clienteSeleccionado == null || _entrenadorSeleccionado == null) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Selecciona cliente y entrenador')));
+      return;
+    }
+
+    setState(() => _saving = true);
+    try {
+      final result = await _service.asignarEntrenadorACliente(
+        clienteId: _clienteSeleccionado!.id,
+        entrenadorId: _entrenadorSeleccionado!.id,
+      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(result['mensaje']?.toString() ?? 'Entrenador asignado')));
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  Future<void> _desvincular() async {
+    if (_clienteSeleccionado == null || _entrenadorSeleccionado == null) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Selecciona cliente y entrenador')));
+      return;
+    }
+
+    setState(() => _saving = true);
+    try {
+      final result = await _service.desvincularEntrenadorDeCliente(
+        clienteId: _clienteSeleccionado!.id,
+        entrenadorId: _entrenadorSeleccionado!.id,
+      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(result['mensaje']?.toString() ?? 'Entrenador desvinculado')));
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
   }
 
   @override
@@ -42,11 +98,11 @@ class _AdminAsignacionesScreenState extends State<AdminAsignacionesScreen> {
                 ],
               ),
               const SizedBox(height: 8),
-              const Text('Entrenadores', style: TextStyle(color: Colors.white, fontSize: 40, fontWeight: FontWeight.w700)),
+              const Text('Asignaciones', style: TextStyle(color: Colors.white, fontSize: 40, fontWeight: FontWeight.w700)),
               const SizedBox(height: 24),
               Expanded(
-                child: FutureBuilder<List<UsuarioModel>>(
-                  future: _futureEntrenadores,
+                child: FutureBuilder<void>(
+                  future: _futureData,
                   builder: (context, snapshot) {
                     if (snapshot.connectionState == ConnectionState.waiting) {
                       return const Center(child: CircularProgressIndicator(color: Color(0xFFFFB84E)));
@@ -55,14 +111,13 @@ class _AdminAsignacionesScreenState extends State<AdminAsignacionesScreen> {
                       return Center(child: Text(snapshot.error.toString(), style: const TextStyle(color: Colors.white)));
                     }
 
-                    final entrenadores = snapshot.data ?? [];
-                    if (entrenadores.isEmpty) {
+                    if (_clientes.isEmpty || _entrenadores.isEmpty) {
                       return RefreshIndicator(
                         onRefresh: _refresh,
                         child: ListView(
                           children: const [
                             SizedBox(height: 120),
-                            Center(child: Text('No hay entrenadores registrados', style: TextStyle(color: Colors.white))),
+                            Center(child: Text('Debes tener clientes y entrenadores creados', style: TextStyle(color: Colors.white))),
                           ],
                         ),
                       );
@@ -70,10 +125,72 @@ class _AdminAsignacionesScreenState extends State<AdminAsignacionesScreen> {
 
                     return RefreshIndicator(
                       onRefresh: _refresh,
-                      child: ListView.separated(
-                        itemCount: entrenadores.length,
-                        separatorBuilder: (_, __) => const SizedBox(height: 12),
-                        itemBuilder: (context, i) => _AdminEntrenadorCard(entrenador: entrenadores[i]),
+                      child: ListView(
+                        children: [
+                          Container(
+                            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8)),
+                            padding: const EdgeInsets.all(16),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text('Selecciona cliente', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 18)),
+                                const SizedBox(height: 8),
+                                DropdownButtonFormField<UsuarioModel>(
+                                  value: _clienteSeleccionado,
+                                  items: _clientes
+                                      .map((cliente) => DropdownMenuItem<UsuarioModel>(
+                                            value: cliente,
+                                            child: Text('${cliente.fullName} (#${cliente.id})'),
+                                          ))
+                                      .toList(),
+                                  onChanged: (value) => setState(() => _clienteSeleccionado = value),
+                                  decoration: const InputDecoration(border: OutlineInputBorder()),
+                                ),
+                                const SizedBox(height: 16),
+                                const Text('Selecciona entrenador', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 18)),
+                                const SizedBox(height: 8),
+                                DropdownButtonFormField<UsuarioModel>(
+                                  value: _entrenadorSeleccionado,
+                                  items: _entrenadores
+                                      .map((entrenador) => DropdownMenuItem<UsuarioModel>(
+                                            value: entrenador,
+                                            child: Text('${entrenador.fullName} (#${entrenador.id})'),
+                                          ))
+                                      .toList(),
+                                  onChanged: (value) => setState(() => _entrenadorSeleccionado = value),
+                                  decoration: const InputDecoration(border: OutlineInputBorder()),
+                                ),
+                                const SizedBox(height: 16),
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: ElevatedButton(
+                                        style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFFFB84E)),
+                                        onPressed: _saving ? null : _asignar,
+                                        child: const Text('Asignar', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w700)),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: ElevatedButton(
+                                        style: ElevatedButton.styleFrom(backgroundColor: Colors.grey[300]),
+                                        onPressed: _saving ? null : _desvincular,
+                                        child: const Text('Desvincular', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w700)),
+                                      ),
+                                    ),
+                                  ],
+                                )
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          const Text('Entrenadores disponibles', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 20)),
+                          const SizedBox(height: 12),
+                          ..._entrenadores.map((entrenador) => Padding(
+                                padding: const EdgeInsets.only(bottom: 12),
+                                child: _AdminEntrenadorCard(entrenador: entrenador),
+                              )),
+                        ],
                       ),
                     );
                   },

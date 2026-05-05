@@ -6,6 +6,13 @@ import '../../providers/auth_provider.dart';
 class AdminHomeScreen extends StatelessWidget {
   const AdminHomeScreen({Key? key}) : super(key: key);
 
+  Future<void> _cerrarSesion(BuildContext context) async {
+    final auth = context.read<AuthProvider>();
+    await auth.logout();
+    if (!context.mounted) return;
+    Navigator.of(context).pushNamedAndRemoveUntil('/login', (_) => false);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -26,6 +33,10 @@ class AdminHomeScreen extends StatelessWidget {
                           'Bienvenido ${authProvider.nombre ?? 'Administrador'}',
                           style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.w700),
                         ),
+                      ),
+                      IconButton(
+                        onPressed: () => _cerrarSesion(context),
+                        icon: const Icon(Icons.logout, color: Colors.white),
                       ),
                       const CircleAvatar(radius: 26, backgroundColor: Colors.white, child: Icon(Icons.person, color: Colors.black)),
                     ],
@@ -87,16 +98,22 @@ class AdminHomeScreen extends StatelessWidget {
                 child: ListView(
                   children: [
                     _AdminMenuCard(
-                      icon: Icons.assignment,
-                      label: 'Asistencia',
-                      subtitle: 'General',
-                      onTap: () => Navigator.of(context).pushNamed('/admin/asistencia'),
+                      icon: Icons.swap_horiz,
+                      label: 'Asignar Entrenador',
+                      subtitle: 'Cliente <-> Entrenador',
+                      onTap: () => Navigator.of(context).pushNamed('/admin/asignaciones'),
                     ),
                     const SizedBox(height: 8),
                     _AdminMenuCard(
                       icon: Icons.people,
                       label: 'Ver Clientes',
                       onTap: () => Navigator.of(context).pushNamed('/admin/clientes'),
+                    ),
+                    const SizedBox(height: 8),
+                    _AdminMenuCard(
+                      icon: Icons.credit_card,
+                      label: 'Membresias',
+                      onTap: () => Navigator.of(context).pushNamed('/admin/membresias'),
                     ),
                     const SizedBox(height: 8),
                     _AdminMenuCard(

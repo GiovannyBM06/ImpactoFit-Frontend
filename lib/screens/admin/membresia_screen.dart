@@ -26,6 +26,70 @@ class _AdminMembresiasScreenState extends State<AdminMembresiasScreen> {
     });
   }
 
+  Future<void> _confirmarPago(MembresiaModel membresia) async {
+    final montoController = TextEditingController();
+    final notasController = TextEditingController();
+
+    try {
+      final confirmado = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text('Confirmar pago #${membresia.id}'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: montoController,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(labelText: 'Monto'),
+              ),
+              TextField(
+                controller: notasController,
+                decoration: const InputDecoration(labelText: 'Notas (opcional)'),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancelar')),
+            FilledButton(onPressed: () => Navigator.pop(context, true), child: const Text('Confirmar')),
+          ],
+        ),
+      );
+
+      if (confirmado != true) return;
+
+      final monto = int.tryParse(montoController.text.trim());
+      if (monto == null || monto <= 0) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Ingresa un monto valido')));
+        return;
+      }
+
+      final result = await _service.activarMembresia(
+        membresiaId: membresia.id,
+        monto: monto,
+        notas: notasController.text.trim().isEmpty ? null : notasController.text.trim(),
+      );
+
+      if (!mounted) return;
+      final comprobante = result is Map ? (result['comprobanteCodigo']?.toString() ?? '-') : '-';
+      await showDialog<void>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Pago confirmado'),
+          content: Text('Comprobante: $comprobante'),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cerrar')),
+          ],
+        ),
+      );
+      await _refresh();
+    } finally {
+      montoController.dispose();
+      notasController.dispose();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -73,7 +137,7 @@ class _AdminMembresiasScreenState extends State<AdminMembresiasScreen> {
                       child: ListView.separated(
                         itemCount: membresias.length,
                         separatorBuilder: (_, __) => const SizedBox(height: 16),
-                        itemBuilder: (context, i) => _MembresiaPlan(membresia: membresias[i]),
+                        itemBuilder: (context, i) => _MembresiaPlan(membresia: membresias[i], onConfirmarPago: () => _confirmarPago(membresias[i])),
                       ),
                     );
                   },
@@ -89,8 +153,9 @@ class _AdminMembresiasScreenState extends State<AdminMembresiasScreen> {
 
 class _MembresiaPlan extends StatelessWidget {
   final MembresiaModel membresia;
+  final VoidCallback onConfirmarPago;
 
-  const _MembresiaPlan({required this.membresia});
+  const _MembresiaPlan({required this.membresia, required this.onConfirmarPago});
 
   @override
   Widget build(BuildContext context) {
@@ -134,25 +199,17 @@ class _MembresiaPlan extends StatelessWidget {
           const SizedBox(height: 6),
           Row(children: [const Text('Vence: ', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)), Text(membresia.fechaVencimiento?.toIso8601String().split('T').first ?? '-')]),
           const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFFFB84E)),
-                  onPressed: () => ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Editar membresía ${membresia.id}'))),
-                  child: const Text('Editar', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w700)),
-                ),
+          if (membresia.estado.toLowerCase() == 'pendiente')
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFFFB84E)),
+                onPressed: onConfirmarPago,
+                child: const Text('Confirmar pago y activar', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w700)),
               ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(backgroundColor: Colors.grey[300]),
-                  onPressed: () => ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Ver detalle de membresía ${membresia.id}'))),
-                  child: const Text('Analytics', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w700)),
-                ),
-              )
-            ],
-          )
+            )
+          else
+            const Text('Membresía ya activada o vencida', style: TextStyle(fontWeight: FontWeight.w700)),
         ],
       ),
     );
