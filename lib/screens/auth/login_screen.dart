@@ -66,7 +66,7 @@ class _LoginScreenState extends State<LoginScreen> {
 						),
 					),
 					Positioned.fill(
-						child: Container(color: Colors.black.withOpacity(0.72)),
+						child: Container(color: Colors.black.withValues(alpha: 0.72)),
 					),
 					SafeArea(
 						child: Padding(
@@ -94,7 +94,7 @@ class _LoginScreenState extends State<LoginScreen> {
 									),
 									const Spacer(),
 									// Email input
-									Text('Correo electrónico', style: TextStyle(color: Colors.white.withOpacity(0.85), fontWeight: FontWeight.w700, fontSize: 20)),
+									Text('Correo electrónico', style: TextStyle(color: Colors.white.withValues(alpha: 0.85), fontWeight: FontWeight.w700, fontSize: 20)),
 									const SizedBox(height: 8),
 									TextField(
 										controller: _emailController,
@@ -110,7 +110,7 @@ class _LoginScreenState extends State<LoginScreen> {
 									Container(height: 2, color: Colors.black),
 									const SizedBox(height: 16),
 									// Password input
-									Text('Contraseña', style: TextStyle(color: Colors.white.withOpacity(0.85), fontWeight: FontWeight.w700, fontSize: 20)),
+									Text('Contraseña', style: TextStyle(color: Colors.white.withValues(alpha: 0.85), fontWeight: FontWeight.w700, fontSize: 20)),
 									const SizedBox(height: 8),
 									TextField(
 										controller: _passController,

@@ -18,10 +18,10 @@ dependencies:
   http: ^1.1.0
 
   # ── Almacenamiento Seguro (Tokens JWT) ─────────────────────────────────────
-  flutter_secure_storage: ^9.0.0
+  flutter_secure_storage: ^10.0.0
 
   # ── Validación de Email ────────────────────────────────────────────────────
-  email_validator: ^2.1.17
+  email_validator: ^3.0.0
 
   # ── Logging & Debugging ────────────────────────────────────────────────────
   logger: ^2.0.0
@@ -39,14 +39,3 @@ flutter:
   # ── Assets ─────────────────────────────────────────────────────────────────
   assets:
     - assets/images/
-    - assets/icons/
-
-  # ── Fuentes ────────────────────────────────────────────────────────────────
-  fonts:
-    - family: Instrument Sans
-      fonts:
-        - asset: assets/fonts/InstrumentSans-Regular.ttf
-        - asset: assets/fonts/InstrumentSans-Bold.ttf
-          weight: 700
-        - asset: assets/fonts/InstrumentSans-SemiBold.ttf
-          weight: 600

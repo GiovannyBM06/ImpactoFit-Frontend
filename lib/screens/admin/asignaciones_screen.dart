@@ -136,7 +136,7 @@ class _AdminAsignacionesScreenState extends State<AdminAsignacionesScreen> {
                                 const Text('Selecciona cliente', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 18)),
                                 const SizedBox(height: 8),
                                 DropdownButtonFormField<UsuarioModel>(
-                                  value: _clienteSeleccionado,
+                                  initialValue: _clienteSeleccionado,
                                   items: _clientes
                                       .map((cliente) => DropdownMenuItem<UsuarioModel>(
                                             value: cliente,
@@ -150,7 +150,7 @@ class _AdminAsignacionesScreenState extends State<AdminAsignacionesScreen> {
                                 const Text('Selecciona entrenador', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 18)),
                                 const SizedBox(height: 8),
                                 DropdownButtonFormField<UsuarioModel>(
-                                  value: _entrenadorSeleccionado,
+                                  initialValue: _entrenadorSeleccionado,
                                   items: _entrenadores
                                       .map((entrenador) => DropdownMenuItem<UsuarioModel>(
                                             value: entrenador,

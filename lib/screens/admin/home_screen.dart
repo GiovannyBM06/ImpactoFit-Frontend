@@ -52,7 +52,7 @@ class AdminHomeScreen extends StatelessWidget {
                   height: 150,
                   child: Stack(
                     children: [
-                      Container(decoration: BoxDecoration(borderRadius: BorderRadius.circular(15), color: Colors.black.withOpacity(0.4))),
+                      Container(decoration: BoxDecoration(borderRadius: BorderRadius.circular(15), color: Colors.black.withValues(alpha: 0.4))),
                       Positioned.fill(
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -76,7 +76,7 @@ class AdminHomeScreen extends StatelessWidget {
                   height: 150,
                   child: Stack(
                     children: [
-                      Container(decoration: BoxDecoration(borderRadius: BorderRadius.circular(15), color: Colors.black.withOpacity(0.4))),
+                      Container(decoration: BoxDecoration(borderRadius: BorderRadius.circular(15), color: Colors.black.withValues(alpha: 0.4))),
                       Positioned.fill(
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -149,7 +149,7 @@ class _AdminMenuCard extends StatelessWidget {
         height: 75,
         child: Stack(
           children: [
-            Container(decoration: BoxDecoration(borderRadius: BorderRadius.circular(15), color: Colors.black.withOpacity(0.4))),
+            Container(decoration: BoxDecoration(borderRadius: BorderRadius.circular(15), color: Colors.black.withValues(alpha: 0.4))),
             Positioned.fill(
               child: Padding(
                 padding: const EdgeInsets.all(12.0),

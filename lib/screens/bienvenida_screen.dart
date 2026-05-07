@@ -18,7 +18,7 @@ class BienvenidaScreen extends StatelessWidget {
 					),
 					// Dark overlay to match prototype
 					Positioned.fill(
-						child: Container(color: Colors.black.withOpacity(0.35)),
+							child: Container(color: Colors.black.withValues(alpha: 0.35)),
 					),
 					// Content
 					SafeArea(
@@ -39,7 +39,7 @@ class BienvenidaScreen extends StatelessWidget {
 												Shadow(
 													offset: Offset(0, 4),
 													blurRadius: 4,
-													color: Colors.black.withOpacity(0.25),
+														color: Colors.black.withValues(alpha: 0.25),
 												)
 											],
 										),

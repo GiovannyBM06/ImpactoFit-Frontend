@@ -59,7 +59,7 @@ class ApiClient {
 
       return _handleResponse(response);
     } catch (e) {
-      _handleError(e);
+      throw _handleError(e);
     }
   }
 
@@ -84,7 +84,7 @@ class ApiClient {
 
       return _handleResponse(response);
     } catch (e) {
-      _handleError(e);
+      throw _handleError(e);
     }
   }
 
@@ -109,7 +109,7 @@ class ApiClient {
 
       return _handleResponse(response);
     } catch (e) {
-      _handleError(e);
+      throw _handleError(e);
     }
   }
 
@@ -131,7 +131,7 @@ class ApiClient {
 
       return _handleResponse(response);
     } catch (e) {
-      _handleError(e);
+      throw _handleError(e);
     }
   }
 
@@ -194,9 +194,9 @@ class ApiClient {
   }
 
   /// Manejar excepciones
-  void _handleError(dynamic error) {
+  Never _handleError(dynamic error) {
     if (error is ApiException) {
-      rethrow;
+      throw error;
     }
 
     if (error is http.ClientException || error.toString().contains('timeout')) {

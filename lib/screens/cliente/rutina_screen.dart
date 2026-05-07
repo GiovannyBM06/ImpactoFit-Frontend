@@ -82,7 +82,7 @@ class _MiRutinaScreenState extends State<MiRutinaScreen> {
                                 Text(rutina.nombre, style: const TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.w700)),
                                 const SizedBox(height: 4),
                                 if (rutina.descripcion != null)
-                                  Text(rutina.descripcion!, style: TextStyle(color: Colors.white.withOpacity(0.7))),
+                                    Text(rutina.descripcion!, style: TextStyle(color: Colors.white.withValues(alpha: 0.7))),
                                 const SizedBox(height: 8),
                                 Text('${rutina.ejercicios.length} ejercicio(s)', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
                               ],

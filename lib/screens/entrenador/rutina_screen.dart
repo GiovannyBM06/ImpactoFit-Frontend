@@ -102,7 +102,7 @@ class _EntrenadorRutinaScreenState extends State<EntrenadorRutinaScreen> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     DropdownButtonFormField<int>(
-                      value: ejercicioId,
+                      initialValue: ejercicioId,
                       items: catalogo
                           .map((e) => DropdownMenuItem<int>(
                                 value: e['id'] as int,
@@ -115,7 +115,7 @@ class _EntrenadorRutinaScreenState extends State<EntrenadorRutinaScreen> {
                     TextField(controller: ordenController, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Orden')),
                     TextField(controller: seriesController, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Series')),
                     DropdownButtonFormField<String>(
-                      value: metricaController.value,
+                      initialValue: metricaController.value,
                       items: const [
                         DropdownMenuItem(value: 'repeticiones', child: Text('Repeticiones')),
                         DropdownMenuItem(value: 'tiempo', child: Text('Tiempo')),

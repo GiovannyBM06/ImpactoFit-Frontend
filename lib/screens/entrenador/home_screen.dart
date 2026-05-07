@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../providers/auth_provider.dart';
-import 'clientes_screen.dart';
 
 class EntrenadorHomeScreen extends StatelessWidget {
   const EntrenadorHomeScreen({Key? key}) : super(key: key);
@@ -54,7 +53,7 @@ class EntrenadorHomeScreen extends StatelessWidget {
                   child: Stack(
                     children: [
                       Container(
-                        decoration: BoxDecoration(borderRadius: BorderRadius.circular(15), color: Colors.black.withOpacity(0.4)),
+                        decoration: BoxDecoration(borderRadius: BorderRadius.circular(15), color: Colors.black.withValues(alpha: 0.4)),
                       ),
                       Positioned.fill(
                         child: Padding(
@@ -111,7 +110,7 @@ class EntrenadorHomeScreen extends StatelessWidget {
                         ),
                         child: Stack(
                           children: [
-                            Container(decoration: BoxDecoration(borderRadius: BorderRadius.circular(15), color: Colors.black.withOpacity(0.4))),
+                            Container(decoration: BoxDecoration(borderRadius: BorderRadius.circular(15), color: Colors.black.withValues(alpha: 0.4))),
                             Center(
                               child: Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
@@ -146,7 +145,7 @@ class EntrenadorHomeScreen extends StatelessWidget {
                         ),
                         child: Stack(
                           children: [
-                            Container(decoration: BoxDecoration(borderRadius: BorderRadius.circular(15), color: Colors.black.withOpacity(0.4))),
+                            Container(decoration: BoxDecoration(borderRadius: BorderRadius.circular(15), color: Colors.black.withValues(alpha: 0.4))),
                             Center(
                               child: Column(
                                 mainAxisAlignment: MainAxisAlignment.center,

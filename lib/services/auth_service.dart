@@ -45,18 +45,27 @@ class AuthService {
 
       // Guardar token y datos del usuario de forma segura
       if (response is Map) {
-        final token = response['accessToken'];
-        final usuarioId = response['usuarioId'];
-        final rol = response['rol'];
-        final nombre = response['nombre'];
+        final typedResponse = Map<String, dynamic>.from(response);
+        final token = typedResponse['accessToken']?.toString();
+        final usuarioId = typedResponse['usuarioId']?.toString();
+        final rol = typedResponse['rol']?.toString();
+        final nombre = typedResponse['nombre']?.toString();
+
+        if (token == null || usuarioId == null || rol == null || nombre == null) {
+          throw ApiException(
+            statusCode: -1,
+            message: 'Respuesta inválida del servidor',
+            details: response,
+          );
+        }
 
         await SecureStorage.write(TOKEN_KEY, token);
-        await SecureStorage.write(USUARIO_ID_KEY, usuarioId.toString());
+        await SecureStorage.write(USUARIO_ID_KEY, usuarioId);
         await SecureStorage.write(ROL_KEY, rol);
         await SecureStorage.write(NOMBRE_KEY, nombre);
         await SecureStorage.write(EMAIL_KEY, email);
 
-        return response;
+        return typedResponse;
       }
 
       throw ApiException(

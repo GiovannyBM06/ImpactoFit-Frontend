@@ -81,7 +81,7 @@ class _AdminCrearClienteScreenState extends State<AdminCrearClienteScreen> {
                         const Text('Rol', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 20)),
                         const SizedBox(height: 4),
                         DropdownButtonFormField<String>(
-                          value: _rolSeleccionado,
+                          initialValue: _rolSeleccionado,
                           dropdownColor: Colors.white,
                           items: const [
                             DropdownMenuItem(value: 'cliente', child: Text('cliente')),

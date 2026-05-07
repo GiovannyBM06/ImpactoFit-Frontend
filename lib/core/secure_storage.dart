@@ -9,9 +9,6 @@ class SecureStorage {
       keyCipherAlgorithm: KeyCipherAlgorithm.RSA_ECB_OAEPwithSHA_256andMGF1Padding,
       storageCipherAlgorithm: StorageCipherAlgorithm.AES_GCM_NoPadding,
     ),
-    iOptions: IOSOptions(
-      accessibility: KeychainAccessibility.first_this_device_this_device_only,
-    ),
   );
 
   /// Guardar un valor encriptado

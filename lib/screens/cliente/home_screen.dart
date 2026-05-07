@@ -109,7 +109,7 @@ class _ActionCard extends StatelessWidget {
             height: 200,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(15),
-              color: Colors.black.withOpacity(0.45),
+              color: Colors.black.withValues(alpha: 0.45),
             ),
           ),
           Positioned.fill(

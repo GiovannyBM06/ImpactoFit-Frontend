@@ -106,7 +106,7 @@ class _AdminCrearClaseScreenState extends State<AdminCrearClaseScreen> {
                               if (snapshot.connectionState == ConnectionState.waiting)
                                 const LinearProgressIndicator(),
                               DropdownButtonFormField<UsuarioModel>(
-                                value: _selectedEntrenador,
+                                initialValue: _selectedEntrenador,
                                 items: entrenadores.map((entrenador) => DropdownMenuItem(value: entrenador, child: Text(entrenador.fullName))).toList(),
                                 onChanged: (value) => setState(() => _selectedEntrenador = value),
                                 decoration: const InputDecoration(labelText: 'Entrenador'),
